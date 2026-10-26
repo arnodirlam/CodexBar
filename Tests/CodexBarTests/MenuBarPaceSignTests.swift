@@ -156,7 +156,7 @@ struct MenuBarPaceSignTests {
                 data: data,
                 icon: nil,
                 options: self.options())
-            #expect(output.attributedTitle.string == "\u{FFFC}\u{2009}–")
+            #expect(output.attributedTitle.string == "–")
             #expect(output.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
                 == .controlTextColor)
         }

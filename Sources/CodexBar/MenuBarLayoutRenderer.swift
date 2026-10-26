@@ -787,13 +787,11 @@ final class MenuBarLayoutRenderer {
                 unavailableLabel: L("%@ unavailable", accessibilityPrefix),
                 accessibilityPrefix: accessibilityPrefix,
                 attributes: attributes)
-            guard options.colorPace else { return rendered }
+            guard options.colorPace, let pace, !pace.isEmpty else { return rendered }
 
             var indicatorColor = neutralColor
             var isMonochrome = true
-            if let pace, !pace.isEmpty,
-               let delta = Self.paceDelta(window, data: data), delta.isFinite, delta != 0
-            {
+            if let delta = Self.paceDelta(window, data: data), delta.isFinite, delta != 0 {
                 // Use the same rounded numeric delta as the displayed text, never its localized sign.
                 let color: NSColor = delta < 0 ? .systemGreen : .systemRed
                 indicatorColor = options.isStale && !options.highContrast ? color
