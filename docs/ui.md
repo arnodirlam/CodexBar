@@ -154,7 +154,7 @@ do not change: positive pace thresholds still mean usage ahead of pace.
 Enable **Color Pace Indicator** under **Menu Bar → Icon** to show a green bar for usage behind pace (reserve) and a red bar
 for usage ahead of pace (risk of running out early). Signed percentages keep their neutral text color, and the bars scale
 with the font. The option defaults off and applies to all four pace tokens and the layout preview.
-Zero and unavailable pace stay neutral; stale pace colors are dimmed unless high-contrast rendering is active.
+Zero and unavailable pace use neutral bars; stale pace colors are dimmed unless high-contrast rendering is active.
 It applies to **Session pace**, **Weekly pace**, **Auto pace**, and **Spend pace** in the layout editor. Enabling it does not add tokens,
 rewrite stored layouts, or migrate legacy display modes. Existing installs stay monochrome until the option is enabled.
 These colors keep the same meaning with either pace sign: reserve is green and deficit is red.

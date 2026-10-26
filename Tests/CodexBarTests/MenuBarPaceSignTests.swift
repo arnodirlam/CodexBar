@@ -88,7 +88,7 @@ struct MenuBarPaceSignTests {
                 elseToken: .hidden)
             let renderer = MenuBarLayoutRenderer()
             let expectedPace = self.expected(delta: delta, reservePositive: reservePositive)
-            let expectedValue = delta == 0 ? expectedPace : "\u{FFFC}\u{2009}\(expectedPace)"
+            let expectedValue = "\u{FFFC}\u{2009}\(expectedPace)"
             let expectedTitle = window == .automatic ? "5h \(expectedValue)" : expectedValue
             let output = renderer.render(
                 layout: MenuBarLayout(lines: [[.pace(window: window)]]),
@@ -105,8 +105,7 @@ struct MenuBarPaceSignTests {
             #expect(conditionalOutput.attributedTitle.string
                 == (delta > 0 ? expectedTitle : ""))
             for rendered in delta > 0 ? [output, conditionalOutput] : [output] {
-                let valueRange = (rendered.attributedTitle.string as NSString).range(
-                    of: delta == 0 ? expectedPace : "\u{FFFC}")
+                let valueRange = (rendered.attributedTitle.string as NSString).range(of: "\u{FFFC}")
                 try #require(valueRange.location != NSNotFound)
                 rendered.attributedTitle.enumerateAttribute(.foregroundColor, in: valueRange) { color, _, _ in
                     #expect(color as? NSColor == expectedColor)
@@ -157,7 +156,7 @@ struct MenuBarPaceSignTests {
                 data: data,
                 icon: nil,
                 options: self.options())
-            #expect(output.attributedTitle.string == "–")
+            #expect(output.attributedTitle.string == "\u{FFFC}\u{2009}–")
             #expect(output.attributedTitle.attribute(.foregroundColor, at: 0, effectiveRange: nil) as? NSColor
                 == .controlTextColor)
         }

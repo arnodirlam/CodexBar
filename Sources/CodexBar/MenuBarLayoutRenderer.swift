@@ -778,25 +778,33 @@ final class MenuBarLayoutRenderer {
             return self.renderPercent(window, data: data, style: style, options: options)
         case let .pace(window):
             let accessibilityPrefix = item.editorLabel(provider: data.provider)
+            let pace = Self.pace(window, data: data)
+            let neutralColor = Self.neutralForegroundColor(options)
             var attributes = style.attributes
-            attributes[.foregroundColor] = Self.neutralForegroundColor(options)
-            if options.colorPace, let value = Self.pace(window, data: data), !value.isEmpty,
+            attributes[.foregroundColor] = neutralColor
+            let rendered = self.optionalTextToken(
+                pace,
+                unavailableLabel: L("%@ unavailable", accessibilityPrefix),
+                accessibilityPrefix: accessibilityPrefix,
+                attributes: attributes)
+            guard options.colorPace else { return rendered }
+
+            var indicatorColor = neutralColor
+            var isMonochrome = true
+            if let pace, !pace.isEmpty,
                let delta = Self.paceDelta(window, data: data), delta.isFinite, delta != 0
             {
                 // Use the same rounded numeric delta as the displayed text, never its localized sign.
                 let color: NSColor = delta < 0 ? .systemGreen : .systemRed
-                let foregroundColor = options.isStale && !options.highContrast ? color
+                indicatorColor = options.isStale && !options.highContrast ? color
                     .withAlphaComponent(0.5) : color
-                let result = NSMutableAttributedString(attributedString: Self.paceIndicator(
-                    color: foregroundColor, style: style))
-                result.append(NSAttributedString(string: "\u{2009}\(value)", attributes: attributes))
-                return (result, "\(accessibilityPrefix) \(value)")
+                isMonochrome = false
             }
-            return self.optionalTextToken(
-                Self.pace(window, data: data),
-                unavailableLabel: L("%@ unavailable", accessibilityPrefix),
-                accessibilityPrefix: accessibilityPrefix,
-                attributes: attributes)
+            let result = NSMutableAttributedString(attributedString: Self.paceIndicator(
+                color: indicatorColor, style: style, isMonochrome: isMonochrome))
+            result.append(NSAttributedString(string: "\u{2009}", attributes: attributes))
+            result.append(rendered.value)
+            return (result, rendered.accessibilityText)
         case .resetCountdown, .resetAbsolute, .windowResetCountdown, .windowResetAbsolute:
             let window = item.resetWindow ?? .automatic
             let qualified = item != .resetCountdown && item != .resetAbsolute
@@ -1439,7 +1447,7 @@ extension MenuBarLayoutRenderer {
         return (result, accessibility)
     }
 
-    private static func paceIndicator(color: NSColor, style: TokenStyle) -> NSAttributedString {
+    private static func paceIndicator(color: NSColor, style: TokenStyle, isMonochrome: Bool) -> NSAttributedString {
         let height = style.font.capHeight
         let size = NSSize(width: height / 2, height: height)
         let image = NSImage(size: size, flipped: false) { rect in
@@ -1447,7 +1455,7 @@ extension MenuBarLayoutRenderer {
             NSBezierPath(rect: rect).fill()
             return true
         }
-        image.isTemplate = false
+        image.isTemplate = isMonochrome
         let attachment = NSTextAttachment()
         attachment.image = image
         attachment.bounds = NSRect(
