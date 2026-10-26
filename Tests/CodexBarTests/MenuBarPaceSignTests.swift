@@ -88,7 +88,8 @@ struct MenuBarPaceSignTests {
                 elseToken: .hidden)
             let renderer = MenuBarLayoutRenderer()
             let expectedPace = self.expected(delta: delta, reservePositive: reservePositive)
-            let expectedTitle = window == .automatic ? "5h \(expectedPace)" : expectedPace
+            let expectedValue = delta == 0 ? expectedPace : "\u{FFFC}\u{2009}\(expectedPace)"
+            let expectedTitle = window == .automatic ? "5h \(expectedValue)" : expectedValue
             let output = renderer.render(
                 layout: MenuBarLayout(lines: [[.pace(window: window)]]),
                 data: data,
@@ -104,7 +105,8 @@ struct MenuBarPaceSignTests {
             #expect(conditionalOutput.attributedTitle.string
                 == (delta > 0 ? expectedTitle : ""))
             for rendered in delta > 0 ? [output, conditionalOutput] : [output] {
-                let valueRange = (rendered.attributedTitle.string as NSString).range(of: expectedPace)
+                let valueRange = (rendered.attributedTitle.string as NSString).range(
+                    of: delta == 0 ? expectedPace : "\u{FFFC}")
                 try #require(valueRange.location != NSNotFound)
                 rendered.attributedTitle.enumerateAttribute(.foregroundColor, in: valueRange) { color, _, _ in
                     #expect(color as? NSColor == expectedColor)
@@ -135,8 +137,11 @@ struct MenuBarPaceSignTests {
                 data: data,
                 icon: nil,
                 options: self.options())
-            #expect(output.attributedTitle.string
-                == (reservePositive ? "+23%\u{2009}·\u{2009}-5%" : "-23%\u{2009}·\u{2009}+5%"))
+            let sessionLabel = MenuBarLayoutToken.pace(window: .session).editorLabel(provider: .claude)
+            let weeklyLabel = MenuBarLayoutToken.pace(window: .weekly).editorLabel(provider: .claude)
+            #expect(output.accessibilityLabel == (reservePositive
+                ? "\(sessionLabel) +23%, \(weeklyLabel) -5%"
+                : "\(sessionLabel) -23%, \(weeklyLabel) +5%"))
         }
     }
 

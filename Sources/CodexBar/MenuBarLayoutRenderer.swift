@@ -780,11 +780,17 @@ final class MenuBarLayoutRenderer {
             let accessibilityPrefix = item.editorLabel(provider: data.provider)
             var attributes = style.attributes
             attributes[.foregroundColor] = Self.neutralForegroundColor(options)
-            if options.colorPace, let delta = Self.paceDelta(window, data: data), delta.isFinite, delta != 0 {
+            if options.colorPace, let value = Self.pace(window, data: data), !value.isEmpty,
+               let delta = Self.paceDelta(window, data: data), delta.isFinite, delta != 0
+            {
                 // Use the same rounded numeric delta as the displayed text, never its localized sign.
                 let color: NSColor = delta < 0 ? .systemGreen : .systemRed
-                attributes[.foregroundColor] = options.isStale && !options.highContrast ? color
+                let foregroundColor = options.isStale && !options.highContrast ? color
                     .withAlphaComponent(0.5) : color
+                let result = NSMutableAttributedString(attributedString: Self.paceIndicator(
+                    color: foregroundColor, style: style))
+                result.append(NSAttributedString(string: "\u{2009}\(value)", attributes: attributes))
+                return (result, "\(accessibilityPrefix) \(value)")
             }
             return self.optionalTextToken(
                 Self.pace(window, data: data),
@@ -1431,6 +1437,27 @@ extension MenuBarLayoutRenderer {
             showUsed: options.showUsed).text
         let accessibility = L("%@ %@", accessibilityPrefix, percentText)
         return (result, accessibility)
+    }
+
+    private static func paceIndicator(color: NSColor, style: TokenStyle) -> NSAttributedString {
+        let height = style.font.capHeight
+        let size = NSSize(width: height / 2, height: height)
+        let image = NSImage(size: size, flipped: false) { rect in
+            color.setFill()
+            NSBezierPath(rect: rect).fill()
+            return true
+        }
+        image.isTemplate = false
+        let attachment = NSTextAttachment()
+        attachment.image = image
+        attachment.bounds = NSRect(
+            x: 0,
+            y: Self.attachmentYOrigin(height: size.height, style: style),
+            width: size.width,
+            height: size.height)
+        let value = NSMutableAttributedString(attributedString: Self.attachmentText(attachment, style: style))
+        value.addAttribute(.foregroundColor, value: color, range: NSRange(location: 0, length: value.length))
+        return value
     }
 
     private static func progressBarSize(size: MenuBarLayoutSize, font: NSFont) -> NSSize {
